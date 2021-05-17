@@ -62,7 +62,7 @@ public class EpcUtil {
         invenrotyStop();
         ReadThread.getInstance().closeThrad();
         MyLib.getInstance().powerOff();
-        System.exit(0);
+//        System.exit(0);
     }
 
     void getTag() {
@@ -82,14 +82,16 @@ public class EpcUtil {
                     else
                         flag = MyLib.getInstance().getNextTag(temp);
                     if (flag) {
-                        String[] tagData = new String[2];
+                        String[] tagData = new String[3];
+                        String rssi = String.valueOf(temp.RSSI);
                         tagData[0] = Reader.bytes_Hexstr(temp.EpcId); //EPC data
                         tagData[1] = Reader.bytes_Hexstr(temp.EmbededData);  //Additional data,default as TID
-                        int rssi = temp.RSSI;
+                        tagData[2] = rssi;
+
                         if (tagData[1].length() == 256) { //data filtering
                             tagData[1] = tagData[1].substring(0, 24);
                         }
-                        MLog.e("epc1111 = " + tagData[0] + " tid = " + tagData[1] + " rssi = " + rssi);
+                        MLog.e("epc1111 = " + tagData[0] + " tid = " + tagData[1] + " rssi = " + tagData[2]);
                         epcData.getEpcData(tagData);
                     }
                 }

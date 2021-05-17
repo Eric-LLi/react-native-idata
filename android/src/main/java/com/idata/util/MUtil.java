@@ -23,41 +23,6 @@ public class MUtil {
 
     private MUtil() {
     }
-//
-//    private AlertDialog atdialog = null;
-//
-//
-//    private void createDialog(Context context) {
-//        atdialog = new AlertDialog.Builder(context).create();
-//        atdialog.setTitle("Unable to power on");
-//        atdialog.setMessage(
-//                "1.Please make sure EMSH service has been enabled:Setting-〉User define-〉EMSH Service-〉Enable EMSH service.\n\n" +
-//                        "2.Please make sure that there are two battery icons with enough power at the top of screen.\n\n" +
-//                        "3.More questions please contact tech-support at:support.idataglobal.com.\n"
-//
-//
-//        );
-//        atdialog.setCancelable(false);
-//    }
-//
-//    public void warningDialog(Context context) {
-//        if (atdialog == null)
-//            createDialog(context);
-//        if (!atdialog.isShowing())
-//            atdialog.show();
-//    }
-//
-//    public void hideDialog() {
-//        if (atdialog != null && atdialog.isShowing())
-//            atdialog.dismiss();
-//    }
-//
-//    public void rcyleDialog() {
-//        if (atdialog != null) {
-//            atdialog.cancel();
-//            atdialog = null;
-//        }
-//    }
 
     //Modify the parameters of the pistol trigger
     private static final String ACTION_KEYBD_REMAP = "android.intent.extend.KEYBD_REMAP";
@@ -78,7 +43,6 @@ public class MUtil {
         intent.putExtra(INTENT_EXTRA_COMMAND, "enable");
         intent.putExtra(INTENT_EXTRA_PARAM_1, (bEnable ? 1 : 0)); // 0: disable / 1: enable
         IdataModule.getInstance().sendBroadcast(intent);
-//        MyApp.getMyApp().sendBroadcast(intent);
     }
 
     public void changCode(boolean status) {
@@ -109,10 +73,8 @@ public class MUtil {
         //**** Reference: /kernel-4.9/include/uapi/linux/input-event-codes.h ****
         intent.putExtra(INTENT_EXTRA_PARAM_1, origKeyCode); // original key scancode
         intent.putExtra(INTENT_EXTRA_PARAM_2, rebindKeyCode); // remap key scancode
-//        MyApp.getMyApp().sendBroadcast(intent);
         IdataModule.getInstance().sendBroadcast(intent);
     }
-
 
     private Object camType = null;
     private boolean isHardwareDecode = false;
@@ -139,7 +101,6 @@ public class MUtil {
             it.setPackage("com.android.auto.iscan");
             it.putExtra(KEY_BARCODE_ENABLESCANNER_ACTION, flag);
             IdataModule.getInstance().sendBroadcast(it);
-//            MyApp.getMyApp().sendBroadcast(it);
         }
     }
 

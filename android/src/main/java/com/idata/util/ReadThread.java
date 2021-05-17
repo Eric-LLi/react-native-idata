@@ -5,12 +5,19 @@ package com.idata.util;
  */
 public class ReadThread extends Thread {
 
+    private static ReadThread instance;
+
     public static ReadThread getInstance() {
-        return MySingleton.singleton;
+        return instance;
+//        return MySingleton.singleton;
     }
 
     private static class MySingleton {
-        final static ReadThread singleton = new ReadThread();
+//        final static ReadThread singleton = new ReadThread();
+    }
+
+    public static void init() {
+        instance = new ReadThread();
     }
 
     private ReadThread() {

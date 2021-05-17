@@ -45,6 +45,7 @@ public class MyLib {// device model
     private Reader mReader;
     private JniModuleAPI jniModuleAPI;
 
+
     private MyLib() {
         mReader = IdataModule.getInstance().getReader();
         jniModuleAPI = IdataModule.getInstance().getJniModuleAPI();
@@ -82,7 +83,7 @@ public class MyLib {// device model
         } else if (currentDeviceName.equals(V5_95VDevice) || currentDeviceName.equals(V4G_95Device)) {
             //  Note:please excute getDevPath() to get the device path before power-on
             path = SerialPort.getDevPath(2); //device mount path
-            int values = SerialPort.ioctlFromJNI(3);//Power on via IO port 
+            int values = SerialPort.ioctlFromJNI(3);//Power on via IO port
             if (values != 0) {
                 return false;
             }
@@ -412,7 +413,7 @@ public class MyLib {// device model
      * @param value 0:s0 mode with max power,1:s1 mode with max power
      */
     public boolean setFastMode(int value) {
-        setPower(maxPower, maxPower);//to set max Read/write power 
+        setPower(maxPower, maxPower);//to set max Read/write power
         Reader.READER_ERR er = mReader.ParamSet(Reader.Mtr_Param.MTR_PARAM_POTL_GEN2_SESSION, new int[]{value});
         return er == operate_success;
     }
