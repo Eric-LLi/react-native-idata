@@ -296,13 +296,23 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
 
     private void doConnect() {
         try {
+            Intent intent = new Intent(EmshConstant.Action.INTENT_EMSH_REQUEST);
+            intent.putExtra(EmshConstant.IntentExtra.EXTRA_COMMAND, EmshConstant.Command.CMD_REQUEST_ENABLE_EMSH_SVC);
+            intent.putExtra(EmshConstant.IntentExtra.EXTRA_PARAM_1, 1);
+            sendBroadcast(intent);
+
+            if (ifPoweron) {
+                doDisconnect();
+            }
+
             //RFID
-            if (mReader == null) {
+            if (!ifPoweron) {
                 currentDeviceName = (String) MUtil.getInstance().getSystemProp(MConstant.DeviceCode);//to get the device SN.
                 mReader = new Reader();
                 jniModuleAPI = new JniModuleAPI();
 
                 mEmshStatusReceiver = new EmshStatusBroadcastReceiver();
+
                 MLog.e("Power ON：" + (ifPoweron = MyLib.getInstance().powerOn()));
 
                 if (!ifPoweron) {
@@ -324,34 +334,35 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
                     IntentFilter intentFilter = new IntentFilter(EmshConstant.Action.INTENT_EMSH_BROADCAST);
                     this.reactContext.registerReceiver(mEmshStatusReceiver, intentFilter);
 
-                    Intent intent = new Intent(EmshConstant.Action.INTENT_EMSH_REQUEST);
+                    Intent intent2 = new Intent(EmshConstant.Action.INTENT_EMSH_REQUEST);
                     intent.putExtra(EmshConstant.IntentExtra.EXTRA_COMMAND, EmshConstant.Command.CMD_REFRESH_EMSH_STATUS);
-                    sendBroadcast(intent);
+                    sendBroadcast(intent2);
                 }
 
                 //RFID Default Setting
                 setFastMode(0);
 
                 setAreaFrequency(0);
-            }
 
-            //Barcode
-            if (scanner == null) {
+                //Barcode
+//            if (scanner == null) {
                 scanner = new ScannerInterface(this.reactContext);
-//            scanner.lockScanKey();
+//                scanner.open();
+//                scanner.lockScanKey();
                 scanner.unlockScanKey();
                 scanner.setOutputMode(1);
 
-                scanner.enablePlayBeep(true);
+                scanner.enablePlayBeep(false);
                 scanner.enableFailurePlayBeep(false);
 
                 IntentFilter intentFilter = new IntentFilter(RES_ACTION);
                 scanReceiver = new ScannerResultReceiver();
                 this.reactContext.registerReceiver(scanReceiver, intentFilter);
+//            }
             }
 
             WritableMap map = Arguments.createMap();
-            map.putBoolean("status", true);
+            map.putBoolean("status", ifPoweron);
             map.putString("error", null);
 
             sendEvent(READER_STATUS, map);
