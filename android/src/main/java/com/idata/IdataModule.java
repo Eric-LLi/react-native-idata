@@ -340,7 +340,7 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
                 }
 
                 //RFID Default Setting
-                setFastMode(0);
+                setFastMode(1);
 
                 setAreaFrequency(0);
 
