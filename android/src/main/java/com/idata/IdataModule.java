@@ -138,12 +138,15 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
 
     @Override
     public void onHostResume() {
-        //
+        Log.d(LOG, "onHostResume");
+//        doConnect();
     }
 
     @Override
     public void onHostPause() {
-        //
+        Log.d(LOG, "onHostPause");
+//        if (ifPoweron)
+//            doDisconnect();
     }
 
     @Override
@@ -313,6 +316,7 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
 
                 mEmshStatusReceiver = new EmshStatusBroadcastReceiver();
 
+                Thread.sleep(1000);
                 MLog.e("Power ON：" + (ifPoweron = MyLib.getInstance().powerOn()));
 
                 if (!ifPoweron) {
