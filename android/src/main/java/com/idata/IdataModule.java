@@ -18,6 +18,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.LifecycleEventListener;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
@@ -53,11 +54,13 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
     private final String TRIGGER_STATUS = "TRIGGER_STATUS";
     private final String WRITE_TAG_STATUS = "WRITE_TAG_STATUS";
     private final String TAG = "TAG";
+    private final String TAGS = "TAGS";
     private final String BARCODE = "BARCODE";
 
-    private static ArrayList<String> cacheTags = new ArrayList<>();
+    private static final ArrayList<String> cacheTags = new ArrayList<>();
     private static boolean isSingleRead = false;
     private static boolean isReadBarcode = false;
+    private static boolean isReading = false;
 
     private static IdataModule instance = null;
 
@@ -73,7 +76,7 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
     public static String currentDeviceName = "";
     public static boolean ifPoweron; // power on status
     private static int currentStatue = -1;
-    public static boolean ifOpenQuickInventoryMode;//Whether to enable the quick inventory mode
+    public static boolean ifOpenQuickInventoryMode = false;//Whether to enable the quick inventory mode
 //    private static EpcUtil mUtil;
 
     public IdataModule(ReactApplicationContext reactContext) {
@@ -104,18 +107,26 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
                 .emit(eventName, msg);
     }
 
+    private void sendEvent(String eventName, WritableArray array) {
+        this.reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(eventName, array);
+    }
+
     public void onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == 138) {
             if (event.getRepeatCount() == 0) {
-                WritableMap map = Arguments.createMap();
-                map.putBoolean("status", true);
-                sendEvent(TRIGGER_STATUS, map);
+                isReading = true;
 
                 if (isReadBarcode) {
                     barcodeRead();
                 } else {
                     read();
                 }
+
+                WritableMap map = Arguments.createMap();
+                map.putBoolean("status", true);
+                sendEvent(TRIGGER_STATUS, map);
             }
         }
     }
@@ -123,15 +134,17 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
     public void onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == 138) {
             if (event.getRepeatCount() == 0) {
-                WritableMap map = Arguments.createMap();
-                map.putBoolean("status", false);
-                sendEvent(TRIGGER_STATUS, map);
+                isReading = false;
 
                 if (isReadBarcode) {
                     barcodeCancel();
                 } else {
                     cancel();
                 }
+
+                WritableMap map = Arguments.createMap();
+                map.putBoolean("status", false);
+                sendEvent(TRIGGER_STATUS, map);
             }
         }
     }
@@ -187,7 +200,7 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
 
     @ReactMethod
     public void clear() {
-        cacheTags = new ArrayList<>();
+        cacheTags.clear();
     }
 
     @ReactMethod
@@ -234,7 +247,7 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
                 if (result)
                     promise.resolve(true);
                 else
-                    throw new Exception("Failed to change antenna level");
+                    throw new Exception("Failed to change antenna power");
             } else {
                 throw new Exception("Reader is not connected");
             }
@@ -266,7 +279,7 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
 
                     byte[] postdata = MString.hexToByte(newTag); //data to be written in
                     byte[] pwd = MString.hexToByte("00000000");
-
+                    Thread.sleep(500);
                     boolean isSucceed = MyLib.getInstance().writeTag((char) 1, 2, postdata, pwd);
 
                     promise.resolve(true);
@@ -396,7 +409,7 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
             currentDeviceName = "";
             ifPoweron = false;
             currentStatue = -1;
-            ifOpenQuickInventoryMode = false;
+//            ifOpenQuickInventoryMode = false;
         }
 
         //Barcode
@@ -464,26 +477,63 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
     }
 
     @Override
-    public void getEpcData(String[] data) {
-        String epc = data[0];
-        String tid = data[1];
-        int rssi = Integer.parseInt(data[2]);
+    public void getEpcData(ArrayList<String[]> tags) {
+        if (isReading) {
+            if (isSingleRead) {
+                String temp_tag = "";
+                int temp_rssi = -1000;
 
-        Log.d(LOG, epc);
+                for (String[] tag : tags) {
+                    String epc = tag[0];
+                    String tid = tag[1];
+                    int rssi = Integer.parseInt(tag[2]);
 
-        if (isSingleRead) {
-            if (rssi > -50) {
-                if (addTagToList(epc) && cacheTags.size() == 1) {
+                    if (rssi >= temp_rssi) {
+                        temp_tag = epc;
+                        temp_rssi = rssi;
+                    }
+                }
+
+                if (addTagToList(temp_tag) && cacheTags.size() == 1) {
                     cancel();
 
-                    sendEvent(TAG, epc);
+                    sendEvent(TAG, temp_tag);
+                }
+            } else {
+                ArrayList<String> temp_tags = new ArrayList<>();
+
+                for (String[] tag : tags) {
+                    String epc = tag[0];
+                    String tid = tag[1];
+                    int rssi = Integer.parseInt(tag[2]);
+
+                    if (addTagToList(epc)) {
+                        temp_tags.add(epc);
+                    }
+                }
+                
+                if (temp_tags.size() > 0) {
+                    sendEvent(TAGS, Arguments.fromList(temp_tags));
                 }
             }
-        } else {
-            if (addTagToList(epc)) {
-                sendEvent(TAG, epc);
-            }
         }
+
+//            ArrayList<String> temp_tags = new ArrayList<>();
+//
+//            for (String[] tag : tags) {
+//                String epc = tag[0];
+//                String tid = tag[1];
+//                int rssi = Integer.parseInt(tag[2]);
+//
+//                if (addTagToList(epc)) {
+//                    temp_tags.add(epc);
+//                }
+//            }
+//
+//            if (temp_tags.size() > 0) {
+//                sendEvent(TAGS, Arguments.fromList(temp_tags));
+//            }
+
     }
 
     // Set the session mode
@@ -549,7 +599,7 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
                 int batteryPowerMode = intent.getIntExtra("BatteryPowerMode", -1);
                 if ((sessionStatus & EmshConstant.EmshSessionStatus.EMSH_STATUS_POWER_STATUS) != 0) {
                     if (batteryPowerMode == currentStatue) { //no processing if in the same state
-                        MLog.e("....SAME STATUS  batteryPowerMode =  " + batteryPowerMode);
+//                        MLog.e("....SAME STATUS  batteryPowerMode =  " + batteryPowerMode);
                         if (!ifPoweron) {
                             ifPoweron = MyLib.getInstance().powerOn();
                             if (ifPoweron) {

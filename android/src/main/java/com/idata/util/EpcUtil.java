@@ -3,6 +3,8 @@ package com.idata.util;
 import com.idata.IdataModule;
 import com.uhf.api.cls.Reader;
 
+import java.util.ArrayList;
+
 
 /**
  * Author CYD
@@ -66,6 +68,7 @@ public class EpcUtil {
     }
 
     void getTag() {
+
         int[] rcvData = new int[]{0};
         boolean flag = false;
         // MLog.e("nums isIfOpenQuickInventoryMode = " + isIfOpenQuickInventoryMode());
@@ -75,6 +78,8 @@ public class EpcUtil {
             flag = MyLib.getInstance().tagInventory_Raw(rcvData);
         if (flag) {
             if (rcvData[0] > 0) {
+                ArrayList<String[]> tags = new ArrayList<>();
+
                 for (int i = 0; i < rcvData[0]; i++) {
                     Reader.TAGINFO temp = IdataModule.getInstance().getReader().new TAGINFO();
                     if (isIfOpenQuickInventoryMode())
@@ -92,9 +97,11 @@ public class EpcUtil {
                             tagData[1] = tagData[1].substring(0, 24);
                         }
                         MLog.e("epc1111 = " + tagData[0] + " tid = " + tagData[1] + " rssi = " + tagData[2]);
-                        epcData.getEpcData(tagData);
+                        tags.add(tagData);
+//                        epcData.getEpcData(tagData);
                     }
                 }
+                epcData.getEpcData(tags);
             }
 
         } else {
