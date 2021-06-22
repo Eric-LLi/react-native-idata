@@ -478,28 +478,28 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
 
     @Override
     public void getEpcData(ArrayList<String[]> tags) {
-        if (isReading) {
-            if (isSingleRead) {
-                String temp_tag = "";
-                int temp_rssi = -1000;
+        if (isSingleRead) {
+            String temp_tag = "";
+            int temp_rssi = -1000;
 
-                for (String[] tag : tags) {
-                    String epc = tag[0];
-                    String tid = tag[1];
-                    int rssi = Integer.parseInt(tag[2]);
+            for (String[] tag : tags) {
+                String epc = tag[0];
+                String tid = tag[1];
+                int rssi = Integer.parseInt(tag[2]);
 
-                    if (rssi >= temp_rssi) {
-                        temp_tag = epc;
-                        temp_rssi = rssi;
-                    }
+                if (rssi >= temp_rssi) {
+                    temp_tag = epc;
+                    temp_rssi = rssi;
                 }
+            }
 
-                if (addTagToList(temp_tag) && cacheTags.size() == 1) {
-                    cancel();
+            if (addTagToList(temp_tag) && cacheTags.size() == 1) {
+                cancel();
 
-                    sendEvent(TAG, temp_tag);
-                }
-            } else {
+                sendEvent(TAG, temp_tag);
+            }
+        } else {
+            if (isReading) {
                 ArrayList<String> temp_tags = new ArrayList<>();
 
                 for (String[] tag : tags) {
@@ -511,7 +511,7 @@ public class IdataModule extends ReactContextBaseJavaModule implements Lifecycle
                         temp_tags.add(epc);
                     }
                 }
-                
+
                 if (temp_tags.size() > 0) {
                     sendEvent(TAGS, Arguments.fromList(temp_tags));
                 }

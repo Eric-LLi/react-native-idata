@@ -1,7 +1,7 @@
 {
   "name": "react-native-idata",
   "title": "React Native Idata",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TODO",
   "main": "./src/index.js",
   "files": [
